@@ -23,9 +23,9 @@ def get_generator(input_dim=100):
     """ Build sequential model that will generate 28x28 images of digits """
     model = Sequential()
     # -------- layer 1 -----------------------
-    model.add(Dense(7*7*4, input_dim=input_dim))
+    model.add(Dense(7*7*128, input_dim=input_dim))
     model.add(BatchNormalization())
-    model.add(Reshape((7, 7, 4)))
+    model.add(Reshape((7, 7, 64)))
     # -------- layer 2 -----------------------
     model.add(Conv2DTranspose(128, kernel_size=5, strides=2, padding='same'))
     model.add(BatchNormalization())
@@ -133,10 +133,11 @@ if __name__ == '__main__':
     model_directory = 'model'
     history = None
     generator = None
+    epochs = 1
     # command line options
     arguments_list = sys.argv[1:]
-    short_opt = 'm:o'
-    long_opt = ['model_dir=', 'output_dir=']
+    short_opt = 'm:o:e:'
+    long_opt = ['model_dir=', 'output_dir=', 'epochs=']
     try:
         arguments, values = getopt.getopt(arguments_list, short_opt, long_opt)
     except getopt.error as err:
@@ -158,6 +159,8 @@ if __name__ == '__main__':
             if not os.path.exists(current_val):
                 create_directory(dir=current_val)
             model_directory = current_val
+        elif current_arg in ('-e', '--epochs'):
+            epochs = int(current_val)
 
     if not generator:
         generator = get_generator()
@@ -165,7 +168,7 @@ if __name__ == '__main__':
         gan = get_gan(generator, discriminator)
     training_data = get_data()
     history = train(discriminator, gan, training_data, model_dir=model_directory,
-                    batch_size=128, epochs=5, history=history)
+                    batch_size=128, epochs=epochs, history=history)
     # save training data
     create_plot(history['d_acc'], path=f'{model_directory}/plots/discriminator_accuracy.png',
                 title='Discriminator Accuracy', x_label='step', y_label='acc')
